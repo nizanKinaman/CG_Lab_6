@@ -21,6 +21,8 @@ namespace CG_Lab_6
         Pen myPen = new Pen(Color.Black);
         List<Line> lines;
 
+        Line rotateLine;
+
         int size = 70;
 
         Point3 centr;
@@ -30,6 +32,7 @@ namespace CG_Lab_6
             InitializeComponent();
             lines = Hex(size);
             centr = new Point3(pictureBox1.Width / 2, pictureBox1.Height / 2, 0);
+            rotateLine = new Line(new Point3(0, 0, 0), new Point3(30, 30, 0));
         }
         public class Point3
         {
@@ -134,7 +137,7 @@ namespace CG_Lab_6
             pictureBox1.Image = bmp;
         }
 
-        public static double[,] MatrixMult(double[,] m1, double[,] m2)
+        public static double[,] MultiplyMatrix(double[,] m1, double[,] m2)
         {
             double[,] m = new double[1,4];
 
@@ -190,15 +193,69 @@ namespace CG_Lab_6
 
         private void button2_Click(object sender, EventArgs e)
         {
-
-            g.Clear(Color.White);
-            List<Line> newlines = new List<Line>();
-            foreach (var l in lines)
+            if (!checkBox1.Checked)
             {
+                if (!checkBox2.Checked)
+                {
+                    g.Clear(Color.White);
+                    List<Line> newlines = new List<Line>();
+                    foreach (var l in lines)
+                    {
+                        double[,] m = new double[1, 4];
+                        m[0, 0] = l.p1.X;
+                        m[0, 1] = l.p1.Y;
+                        m[0, 2] = l.p1.Z;
+                        m[0, 3] = 1;
+                        var angle = double.Parse(textBox6.Text) * Math.PI / 180;
+                        double[,] matrx = new double[4, 4]
+                        {   { Math.Cos(angle), 0, Math.Sin(angle), 0},
+                    { 0, 1, 0, 0 },
+                    {-Math.Sin(angle), 0, Math.Cos(angle), 0 },
+                    { 0, 0, 0, 1 } };
+
+                        angle = double.Parse(textBox5.Text) * Math.PI / 180;
+                        double[,] matry = new double[4, 4]
+                        {  { 1, 0, 0, 0 },
+                    { 0, Math.Cos(angle), -Math.Sin(angle), 0},
+                    {0, Math.Sin(angle), Math.Cos(angle), 0 },
+                    { 0, 0, 0, 1 } };
+
+                        angle = double.Parse(textBox4.Text) * Math.PI / 180;
+                        double[,] matrz = new double[4, 4]
+                        {  { Math.Cos(angle), -Math.Sin(angle), 0, 0},
+                    { Math.Sin(angle), Math.Cos(angle), 0, 0 },
+                    { 0, 0, 1, 0 },
+                    { 0, 0, 0, 1 } };
+
+                        var mr = MultiplyMatrix(m, matrx);
+                        mr = MultiplyMatrix(mr, matry);
+                        mr = MultiplyMatrix(mr, matrz);
+
+                        m[0, 0] = l.p2.X;
+                        m[0, 1] = l.p2.Y;
+                        m[0, 2] = l.p2.Z;
+                        m[0, 3] = 1;
+
+                        var mr2 = MultiplyMatrix(m, matrx);
+                        mr2 = MultiplyMatrix(mr2, matry);
+                        mr2 = MultiplyMatrix(mr2, matrz);
+
+                        newlines.Add(new Line(new Point3(mr[0, 0], mr[0, 1], mr[0, 2]), new Point3(mr2[0, 0], mr2[0, 1], mr2[0, 2])));
+
+                        g.DrawLine(myPen, Position2d(new Point3((int)mr[0, 0], (int)mr[0, 1], (int)mr[0, 2])), Position2d(new Point3((int)mr2[0, 0], (int)mr2[0, 1], (int)mr2[0, 2])));
+                    }
+                    lines = newlines;
+                }
+                else
+                    RotateWithLine();
+            }
+            else
+            {
+                g.Clear(Color.White);
                 double[,] m = new double[1, 4];
-                m[0, 0] = l.p1.X;
-                m[0, 1] = l.p1.Y;
-                m[0, 2] = l.p1.Z;
+                m[0, 0] = rotateLine.p1.X;
+                m[0, 1] = rotateLine.p1.Y;
+                m[0, 2] = rotateLine.p1.Z;
                 m[0, 3] = 1;
                 var angle = double.Parse(textBox6.Text) * Math.PI / 180;
                 double[,] matrx = new double[4, 4]
@@ -221,24 +278,25 @@ namespace CG_Lab_6
                     { 0, 0, 1, 0 },
                     { 0, 0, 0, 1 } };
 
-                var mr = MatrixMult(m, matrx);
-                mr = MatrixMult(mr, matry);
-                mr = MatrixMult(mr, matrz);
+                var mr = MultiplyMatrix(m, matrx);
+                mr = MultiplyMatrix(mr, matry);
+                mr = MultiplyMatrix(mr, matrz);
 
-                m[0, 0] = l.p2.X;
-                m[0, 1] = l.p2.Y;
-                m[0, 2] = l.p2.Z;
+                m[0, 0] = rotateLine.p2.X;
+                m[0, 1] = rotateLine.p2.Y;
+                m[0, 2] = rotateLine.p2.Z;
                 m[0, 3] = 1;
-                
-                var mr2 = MatrixMult(m, matrx);
-                mr2 = MatrixMult(mr2, matry);
-                mr2 = MatrixMult(mr2, matrz);
 
-                newlines.Add(new Line(new Point3(mr[0, 0], mr[0, 1], mr[0, 2]), new Point3(mr2[0, 0], mr2[0, 1], mr2[0, 2])));
+                var mr2 = MultiplyMatrix(m, matrx);
+                mr2 = MultiplyMatrix(mr2, matry);
+                mr2 = MultiplyMatrix(mr2, matrz);
+
+                Line newline = new Line(new Point3(mr[0, 0], mr[0, 1], mr[0, 2]), new Point3(mr2[0, 0], mr2[0, 1], mr2[0, 2]));
 
                 g.DrawLine(myPen, Position2d(new Point3((int)mr[0, 0], (int)mr[0, 1], (int)mr[0, 2])), Position2d(new Point3((int)mr2[0, 0], (int)mr2[0, 1], (int)mr2[0, 2])));
+
+                rotateLine = newline;
             }
-            lines = newlines;
             pictureBox1.Image = bmp;
         }
 
@@ -249,43 +307,77 @@ namespace CG_Lab_6
         }
 
         private void button1_Click(object sender, EventArgs e)
-        {
+        {           
             var posx = double.Parse(textBox1.Text);
             var posy = double.Parse(textBox2.Text);
             var posz = double.Parse(textBox3.Text);
             //centr.X += posx;
             //centr.Y += posy;
             //centr.Z += posz;
-            g.Clear(Color.White);
-            List<Line> newlines = new List<Line>();
-            foreach (var l in lines)
+            if (!checkBox1.Checked)
             {
-                double[,] m = new double[1, 4];
-                m[0, 0] = l.p1.X;
-                m[0, 1] = l.p1.Y;
-                m[0, 2] = l.p1.Z;
-                m[0, 3] = 1;
-                
-                double[,] matr = new double[4, 4]
-                {   { 1, 0, 0, 0},
+                g.Clear(Color.White);
+                List<Line> newlines = new List<Line>();
+                foreach (var l in lines)
+                {
+                    double[,] m = new double[1, 4];
+                    m[0, 0] = l.p1.X;
+                    m[0, 1] = l.p1.Y;
+                    m[0, 2] = l.p1.Z;
+                    m[0, 3] = 1;
+
+                    double[,] matr = new double[4, 4]
+                    {   { 1, 0, 0, 0},
                     { 0, 1, 0, 0 },
                     {0, 0, 1, 0 },
                     { -posx, -posy, -posz, 1 } };
 
-                var mr = MatrixMult(m, matr);
+                    var mr = MultiplyMatrix(m, matr);
 
-                m[0, 0] = l.p2.X;
-                m[0, 1] = l.p2.Y;
-                m[0, 2] = l.p2.Z;
+                    m[0, 0] = l.p2.X;
+                    m[0, 1] = l.p2.Y;
+                    m[0, 2] = l.p2.Z;
+                    m[0, 3] = 1;
+
+                    var mr2 = MultiplyMatrix(m, matr);
+
+                    newlines.Add(new Line(new Point3(mr[0, 0], mr[0, 1], mr[0, 2]), new Point3(mr2[0, 0], mr2[0, 1], mr2[0, 2])));
+
+                    g.DrawLine(myPen, Position2d(new Point3((int)mr[0, 0], (int)mr[0, 1], (int)mr[0, 2])), Position2d(new Point3((int)mr2[0, 0], (int)mr2[0, 1], (int)mr2[0, 2])));
+                }
+                lines = newlines;
+            }
+            else
+            {
+                g.Clear(Color.White);
+                double[,] m = new double[1, 4];
+                m[0, 0] = rotateLine.p1.X;
+                m[0, 1] = rotateLine.p1.Y;
+                m[0, 2] = rotateLine.p1.Z;
                 m[0, 3] = 1;
 
-                var mr2 = MatrixMult(m, matr);
+                double[,] matr = new double[4, 4]
+                    {   { 1, 0, 0, 0},
+                    { 0, 1, 0, 0 },
+                    {0, 0, 1, 0 },
+                    { -posx, -posy, -posz, 1 } };
 
-                newlines.Add(new Line(new Point3(mr[0, 0], mr[0, 1], mr[0, 2]), new Point3(mr2[0, 0], mr2[0, 1], mr2[0, 2])));
+                var mr = MultiplyMatrix(m, matr);
+
+                m[0, 0] = rotateLine.p2.X;
+                m[0, 1] = rotateLine.p2.Y;
+                m[0, 2] = rotateLine.p2.Z;
+                m[0, 3] = 1;
+
+                var mr2 = MultiplyMatrix(m, matr);
+
+                Line newline = new Line(new Point3(mr[0, 0], mr[0, 1], mr[0, 2]), new Point3(mr2[0, 0], mr2[0, 1], mr2[0, 2]));
 
                 g.DrawLine(myPen, Position2d(new Point3((int)mr[0, 0], (int)mr[0, 1], (int)mr[0, 2])), Position2d(new Point3((int)mr2[0, 0], (int)mr2[0, 1], (int)mr2[0, 2])));
+
+                rotateLine = newline;
+
             }
-            lines = newlines;
             pictureBox1.Image = bmp;
         }
 
@@ -309,14 +401,14 @@ namespace CG_Lab_6
                     { 0, 0, posz, 0 },
                     { 0, 0, 0, 1 } };
 
-                var mr = MatrixMult(m, matr);
+                var mr = MultiplyMatrix(m, matr);
 
                 m[0, 0] = l.p2.X;
                 m[0, 1] = l.p2.Y;
                 m[0, 2] = l.p2.Z;
                 m[0, 3] = 1;
 
-                var mr2 = MatrixMult(m, matr);
+                var mr2 = MultiplyMatrix(m, matr);
 
                 newlines.Add(new Line(new Point3(mr[0, 0], mr[0, 1], mr[0, 2]), new Point3(mr2[0, 0], mr2[0, 1], mr2[0, 2])));
 
@@ -344,14 +436,14 @@ namespace CG_Lab_6
                     { 0, 0, 1, 0 },
                     { 0, 0, 0, 1 } };
 
-                var mr = MatrixMult(m, matr);
+                var mr = MultiplyMatrix(m, matr);
 
                 m[0, 0] = l.p2.X;
                 m[0, 1] = l.p2.Y;
                 m[0, 2] = l.p2.Z;
                 m[0, 3] = 1;
 
-                var mr2 = MatrixMult(m, matr);
+                var mr2 = MultiplyMatrix(m, matr);
 
                 newlines.Add(new Line(new Point3(mr[0, 0], mr[0, 1], mr[0, 2]), new Point3(mr2[0, 0], mr2[0, 1], mr2[0, 2])));
 
@@ -379,14 +471,14 @@ namespace CG_Lab_6
                     { 0, 0, 1, 0 },
                     { 0, 0, 0, 1 } };
 
-                var mr = MatrixMult(m, matr);
+                var mr = MultiplyMatrix(m, matr);
 
                 m[0, 0] = l.p2.X;
                 m[0, 1] = l.p2.Y;
                 m[0, 2] = l.p2.Z;
                 m[0, 3] = 1;
 
-                var mr2 = MatrixMult(m, matr);
+                var mr2 = MultiplyMatrix(m, matr);
 
                 newlines.Add(new Line(new Point3(mr[0, 0], mr[0, 1], mr[0, 2]), new Point3(mr2[0, 0], mr2[0, 1], mr2[0, 2])));
 
@@ -414,14 +506,14 @@ namespace CG_Lab_6
                     { 0, 0, -1, 0 },
                     { 0, 0, 0, 1 } };
 
-                var mr = MatrixMult(m, matr);
+                var mr = MultiplyMatrix(m, matr);
 
                 m[0, 0] = l.p2.X;
                 m[0, 1] = l.p2.Y;
                 m[0, 2] = l.p2.Z;
                 m[0, 3] = 1;
 
-                var mr2 = MatrixMult(m, matr);
+                var mr2 = MultiplyMatrix(m, matr);
 
                 newlines.Add(new Line(new Point3(mr[0, 0], mr[0, 1], mr[0, 2]), new Point3(mr2[0, 0], mr2[0, 1], mr2[0, 2])));
 
@@ -431,6 +523,61 @@ namespace CG_Lab_6
             pictureBox1.Image = bmp;
         }
 
-       
+        
+
+        public void DrawRotateLine()
+        {
+            g.DrawLine(myPen, Position2d(rotateLine.p1), Position2d(rotateLine.p2));
+            pictureBox1.Image = bmp;
+        }
+
+        public void RotateWithLine()
+        {
+
+            g.Clear(Color.White);
+            List<Line> newlines = new List<Line>();
+            foreach (var ll in lines)
+            {
+                double[,] mm = new double[1, 4];
+                mm[0, 0] = ll.p1.X;
+                mm[0, 1] = ll.p1.Y;
+                mm[0, 2] = ll.p1.Z;
+                mm[0, 3] = 1;
+
+                var angle = double.Parse(textBox6.Text) * Math.PI / 180;
+
+                var p1 = rotateLine.p1;
+                var p2 = rotateLine.p2;
+
+                double l = (p2.X - p1.X) / Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2) + Math.Pow(p1.Z - p2.Z, 2));
+                double m = (p2.Y - p1.Y) / Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2) + Math.Pow(p1.Z - p2.Z, 2));
+                double n = (p2.Z - p1.Z) / Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2) + Math.Pow(p1.Z - p2.Z, 2));
+
+                double[,] matr = new double[4, 4]
+                    {   { l*l + Math.Cos(angle)*(1 - l*l), l*(1 - Math.Cos(angle))*m + n*Math.Sin(angle), l*(1 - Math.Cos(angle))*n - m*Math.Sin(angle), 0},
+                    { l*(1 - Math.Cos(angle))*m - n * Math.Sin(angle), m*m + Math.Cos(angle)*(1 - m*m), m*(1 - Math.Cos(angle))*n + l*Math.Sin(angle), 0 },
+                    {l*(1 - Math.Cos(angle))*n + m*Math.Sin(angle), m*(1 - Math.Cos(angle))*n - l*Math.Sin(angle), n*n + Math.Cos(angle)*(1 - n*n), 0 },
+                    { 0, 0, 0, 1 } };
+
+                var mr = MultiplyMatrix(mm, matr);
+
+                mm[0, 0] = ll.p2.X;
+                mm[0, 1] = ll.p2.Y;
+                mm[0, 2] = ll.p2.Z;
+                mm[0, 3] = 1;
+
+                var mr2 = MultiplyMatrix(mm, matr);
+                newlines.Add(new Line(new Point3(mr[0, 0], mr[0, 1], mr[0, 2]), new Point3(mr2[0, 0], mr2[0, 1], mr2[0, 2])));
+
+                g.DrawLine(myPen, Position2d(new Point3((int)mr[0, 0], (int)mr[0, 1], (int)mr[0, 2])), Position2d(new Point3((int)mr2[0, 0], (int)mr2[0, 1], (int)mr2[0, 2])));
+            }
+            lines = newlines;
+            pictureBox1.Image = bmp;
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            DrawRotateLine();
+        }
     }
 }
