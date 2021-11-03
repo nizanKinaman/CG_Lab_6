@@ -72,6 +72,34 @@ namespace CG_Lab_6
 
         }
 
+        public class Edge
+        {
+            public List<Line> lines;
+
+            public Edge()
+            {
+                this.lines = new List<Line> { };
+            }
+            public Edge(List<Line> l)
+            {
+                this.lines = l;
+            }
+        }
+
+        public class Polyhedron
+        {
+            public List<Edge> edges;
+
+            public Polyhedron()
+            {
+                this.edges = new List<Edge> { };
+            }
+            public Polyhedron(List<Edge> e)
+            {
+                this.edges = e;
+            }
+        }
+
         public List<Line> Hex(int size)
         {
             var hex_centr = size / 2;
