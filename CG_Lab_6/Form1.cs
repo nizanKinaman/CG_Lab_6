@@ -29,6 +29,7 @@ namespace CG_Lab_6
         Point3 moving_point_line = new Point3(0, 0, 0);
         Point3 centr;
 
+        bool is_dop_line = false;
         public Form1()
         {
             InitializeComponent();
@@ -68,7 +69,7 @@ namespace CG_Lab_6
                 this.p1 = p1;
                 this.p2 = p2;
             }
-            
+
         }
 
         public List<Line> Hex(int size)
@@ -124,24 +125,16 @@ namespace CG_Lab_6
                 new Line(new Point3(oct_centr, 0, -oct_centr), new Point3(0, -oct_centr, 0)), //4->6
             };
         }
-        
+
 
         Point Position2d(Point3 p)
-        {  
-            return new Point((int)p.X + (int)centr.X, (int)p.Y + (int)centr.Y);
-        }
-
-        public void DrawLine()
         {
-            var lines = Hex(50);
-            foreach (var l in lines)
-                g.DrawLine(myPen, Position2d(l.p1), Position2d(l.p2));
-            pictureBox1.Image = bmp;
+            return new Point((int)p.X + (int)centr.X, (int)p.Y + (int)centr.Y);
         }
 
         public static double[,] MultiplyMatrix(double[,] m1, double[,] m2)
         {
-            double[,] m = new double[1,4];
+            double[,] m = new double[1, 4];
 
             for (int i = 0; i < 4; i++)
             {
@@ -155,7 +148,7 @@ namespace CG_Lab_6
             return m;
         }
 
-        
+
 
         private void radioButton6_CheckedChanged(object sender, EventArgs e)
         {
@@ -306,16 +299,22 @@ namespace CG_Lab_6
 
         private void button7_Click(object sender, EventArgs e)
         {
+
+            moving_point = new Point3(0, 0, 0);
+            moving_point_line = new Point3(0, 0, 0);
+            lines = Hex(size);
+            rotateLine = new Line(new Point3(0, 0, 0), new Point3(30, 30, 0));
+            is_dop_line = false;
             g.Clear(Color.White);
             pictureBox1.Image = bmp;
         }
 
         private void button1_Click(object sender, EventArgs e)
-        {           
+        {
             var posx = double.Parse(textBox1.Text);
             var posy = double.Parse(textBox2.Text);
             var posz = double.Parse(textBox3.Text);
-            
+
 
             if (!checkBox1.Checked)
             {
@@ -494,7 +493,7 @@ namespace CG_Lab_6
                 var mr2 = MultiplyMatrix(m, matr);
 
                 newlines.Add(new Line(new Point3(mr[0, 0], mr[0, 1], mr[0, 2]), new Point3(mr2[0, 0], mr2[0, 1], mr2[0, 2])));
-                
+
                 //g.DrawLine(myPen, Position2d(new Point3((int)mr[0, 0], (int)mr[0, 1], (int)mr[0, 2])), Position2d(new Point3((int)mr2[0, 0], (int)mr2[0, 1], (int)mr2[0, 2])));
             }
             lines = newlines;
@@ -530,7 +529,7 @@ namespace CG_Lab_6
                 var mr2 = MultiplyMatrix(m, matr);
 
                 newlines.Add(new Line(new Point3(mr[0, 0], mr[0, 1], mr[0, 2]), new Point3(mr2[0, 0], mr2[0, 1], mr2[0, 2])));
-                
+
                 //g.DrawLine(myPen, Position2d(new Point3((int)mr[0, 0], (int)mr[0, 1], (int)mr[0, 2])), Position2d(new Point3((int)mr2[0, 0], (int)mr2[0, 1], (int)mr2[0, 2])));
             }
             lines = newlines;
@@ -538,7 +537,7 @@ namespace CG_Lab_6
             pictureBox1.Image = bmp;
         }
 
-        
+
 
         public void DrawRotateLine()
         {
@@ -554,9 +553,9 @@ namespace CG_Lab_6
             foreach (var ll in lines)
             {
                 double[,] mm = new double[1, 4];
-                mm[0, 0] = ll.p1.X - moving_point.X;
-                mm[0, 1] = ll.p1.Y - moving_point.Y;
-                mm[0, 2] = ll.p1.Z - moving_point.Z;
+                mm[0, 0] = ll.p1.X;
+                mm[0, 1] = ll.p1.Y;
+                mm[0, 2] = ll.p1.Z;
                 mm[0, 3] = 1;
 
                 var angle = double.Parse(textBox6.Text) * Math.PI / 180;
@@ -576,17 +575,16 @@ namespace CG_Lab_6
 
                 var mr = MultiplyMatrix(mm, matr);
 
-                mm[0, 0] = ll.p2.X - moving_point.X;
-                mm[0, 1] = ll.p2.Y - moving_point.Y;
-                mm[0, 2] = ll.p2.Z - moving_point.Z;
+                mm[0, 0] = ll.p2.X;
+                mm[0, 1] = ll.p2.Y;
+                mm[0, 2] = ll.p2.Z;
                 mm[0, 3] = 1;
 
                 var mr2 = MultiplyMatrix(mm, matr);
                 newlines.Add(new Line(new Point3(mr[0, 0] + moving_point.X, mr[0, 1] + moving_point.Y, mr[0, 2] + moving_point.Z), new Point3(mr2[0, 0] + moving_point.X, mr2[0, 1] + moving_point.Y, mr2[0, 2] + moving_point.Z)));
-                
-                //g.DrawLine(myPen, Position2d(new Point3((int)mr[0, 0] + moving_point.X, (int)mr[0, 1] + moving_point.Y, (int)mr[0, 2] + moving_point.Z)), Position2d(new Point3((int)mr2[0, 0] + moving_point.X, (int)mr2[0, 1] + moving_point.Y, (int)mr2[0, 2] + moving_point.Z)));
+
             }
-            
+
             lines = newlines;
             DrawAll();
             pictureBox1.Image = bmp;
@@ -594,15 +592,17 @@ namespace CG_Lab_6
 
         private void button8_Click(object sender, EventArgs e)
         {
+            is_dop_line = true;
             DrawRotateLine();
         }
         public void DrawAll()
         {
-            g.DrawLine(myPen, Position2d(rotateLine.p1), Position2d(rotateLine.p2));
+            if (is_dop_line)
+                g.DrawLine(myPen, Position2d(rotateLine.p1), Position2d(rotateLine.p2));
             foreach (var line in lines)
             {
-                g.DrawLine(myPen, Position2d(line.p1), Position2d(line.p2) );
-            } 
+                g.DrawLine(myPen, Position2d(line.p1), Position2d(line.p2));
+            }
         }
     }
 }
